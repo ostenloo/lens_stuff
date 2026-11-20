@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import jpp_cli  # noqa: E402  (needs scripts/ on the path)
+
 from lens_evals.readout_evals.readout_eval_items import (  # noqa: E402
     MACRO_EVALS,
     MODEL_CORRECTNESS_CSV,
