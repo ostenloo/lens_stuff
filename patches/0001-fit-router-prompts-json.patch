@@ -1,0 +1,140 @@
+# fit-router --prompts-json, mirroring fit-shard.
+# Base: safety-research/jpp_lens @ d7efc0de372e20589e899188c0cfe8434acc63ec
+# Apply from the jpp_lens root: git apply gibberish/patches/0001-fit-router-prompts-json.patch
+diff --git a/scripts/jpp_cli.py b/scripts/jpp_cli.py
+index 3371257..0d37368 100644
+--- a/scripts/jpp_cli.py
++++ b/scripts/jpp_cli.py
+@@ -622,6 +622,13 @@ def build_parser() -> argparse.ArgumentParser:
+         default=NUM_WIKITEXT_FIT_PROMPTS,
+         help="First N of the WikiText pool. Default %(default)s.",
+     )
++    fit_router_parser.add_argument(
++        "--prompts-json",
++        default=None,
++        help="Read the prompt pool from this JSON list (the first --num-prompts are used) "
++        "instead of streaming WikiText from the Hub, so the router is fitted on the same "
++        "corpus as the shards. Default: stream.",
++    )
+     fit_router_parser.add_argument("--num-clusters", type=int, default=RECIPE_NUM_CLUSTERS)
+     fit_router_parser.add_argument("--projection-dim", type=int, default=64)
+     fit_router_parser.add_argument(
+@@ -856,9 +863,14 @@ def _load_model(args: argparse.Namespace) -> LensModel:
+ 
+ def _run_fit_router(args: argparse.Namespace) -> None:
+     model = _load_model(args)
++    prompts = (
++        load_fit_prompts_from_json(args.prompts_json, args.num_prompts)
++        if args.prompts_json is not None
++        else load_fit_prompts(args.num_prompts)
++    )
+     router = fit_router(
+         model,
+-        load_fit_prompts(args.num_prompts),
++        prompts,
+         layers=args.layers,
+         num_clusters=args.num_clusters,
+         projection_dim=args.projection_dim,
+diff --git a/src/workspace_lens/tests/test_jpp_cli.py b/src/workspace_lens/tests/test_jpp_cli.py
+index b102d29..1397e95 100644
+--- a/src/workspace_lens/tests/test_jpp_cli.py
++++ b/src/workspace_lens/tests/test_jpp_cli.py
+@@ -1027,6 +1027,98 @@ def test_main_fit_router_and_fit_shard_end_to_end_on_tiny_model(
+     assert shard_stamp["args"]["shard_idx"] == 1
+ 
+ 
++def test_main_fit_router_reads_the_prompt_pool_from_json(
++    model: TinyDecoder, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    """``--prompts-json`` replaces the WikiText stream, as it already does on
++    ``fit-shard``: the first ``--num-prompts`` of the JSON list reach
++    ``fit_router`` and the streaming loader is never called."""
++    monkeypatch.setattr(jpp_cli, "get_hf_model", lambda name, **_kwargs: model)
++
++    def _no_stream(num_prompts: int) -> list[str]:
++        raise AssertionError("WikiText was streamed despite --prompts-json")
++
++    monkeypatch.setattr(jpp_cli, "load_fit_prompts", _no_stream)
++
++    fitted_on: list[list[str]] = []
++    stream_free_fit_router = jpp_cli.fit_router
++
++    def _recording_fit_router(model_arg, prompts, **kwargs):
++        fitted_on.append(list(prompts))
++        return stream_free_fit_router(model_arg, prompts, **kwargs)
++
++    monkeypatch.setattr(jpp_cli, "fit_router", _recording_fit_router)
++
++    pool_path = tmp_path / "pool.json"
++    pool_path.write_text(json.dumps([*PROMPTS, "zyxwvutsrq " * 5]))
++    router_path = tmp_path / "router.pt"
++
++    assert (
++        main(
++            [
++                "fit-router",
++                "--hf-model-name",
++                "tiny",
++                "--layers",
++                "0,1,2",
++                "--prompts-json",
++                str(pool_path),
++                "--num-prompts",
++                str(len(PROMPTS)),
++                "--num-clusters",
++                str(NUM_CLUSTERS),
++                "--projection-dim",
++                str(PROJECTION_DIM),
++                "--max-seq-len",
++                str(MAX_SEQ_LEN),
++                "--out",
++                str(router_path),
++            ]
++        )
++        == 0
++    )
++    assert fitted_on == [list(PROMPTS)]
++    assert ActivationRouterCollection.load(str(router_path)).num_clusters == NUM_CLUSTERS
++
++
++def test_fit_router_without_prompts_json_still_streams_wikitext(
++    model: TinyDecoder, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    """The flag is optional: with it absent the stage keeps its old behaviour."""
++    monkeypatch.setattr(jpp_cli, "get_hf_model", lambda name, **_kwargs: model)
++    streamed: list[int] = []
++
++    def _stream(num_prompts: int) -> list[str]:
++        streamed.append(num_prompts)
++        return list(PROMPTS)
++
++    monkeypatch.setattr(jpp_cli, "load_fit_prompts", _stream)
++
++    assert (
++        main(
++            [
++                "fit-router",
++                "--hf-model-name",
++                "tiny",
++                "--layers",
++                "0,1,2",
++                "--num-prompts",
++                "4",
++                "--num-clusters",
++                str(NUM_CLUSTERS),
++                "--projection-dim",
++                str(PROJECTION_DIM),
++                "--max-seq-len",
++                str(MAX_SEQ_LEN),
++                "--out",
++                str(tmp_path / "router.pt"),
++            ]
++        )
++        == 0
++    )
++    assert streamed == [4]
++
++
+ def test_merge_experts_argv_defaults_device_to_the_gpu_when_available() -> None:
+     args = jpp_cli.build_parser().parse_args(
+         ["merge-experts", "--checkpoint-dirs", "shard0", "--out", "experts.pt"]
