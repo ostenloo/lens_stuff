@@ -1,0 +1,46 @@
+{
+  "condition": "c0_wikitext",
+  "prompts": 1000,
+  "token_counts": {
+    "min": 129,
+    "p05": 142,
+    "median": 208,
+    "p95": 370,
+    "max": 640,
+    "mean": 224.2
+  },
+  "prompts_under_min_tokens": 0,
+  "min_tokens": 128,
+  "whole_pool": {
+    "tokens": 224225,
+    "types": 17991,
+    "unigram_entropy_bits": 10.1508,
+    "type_token_ratio": 0.0802,
+    "non_alphanumeric_share": 0.168
+  },
+  "fit_window": {
+    "prompts": 64,
+    "max_seq_len": 128,
+    "tokens": 8192,
+    "types": 2376,
+    "unigram_entropy_bits": 9.1148,
+    "type_token_ratio": 0.29,
+    "non_alphanumeric_share": 0.1498,
+    "mean_per_token_loss": 2.6974
+  },
+  "build": {
+    "streamed": 1500,
+    "kept": 1000,
+    "dropped_raw_too_short": 24,
+    "dropped_shuffled_too_short": 2,
+    "shuffle_seed": "the record's index in the stream",
+    "last_stream_index_used": 1025
+  },
+  "examples": [
+    " Senj\u014d no Valkyria 3 : Unrecorded Chronicles ( Japanese : \u6226\u5834\u306e\u30f4\u30a1\u30eb\u30ad\u30e5\u30ea\u30a23 , lit . Valkyria of the Battlefield 3 ) , commonly referred to as Valkyria Chronicles III outside Japan , is a tactical role @-@ playing video game developed by Sega and Media.Vision for the PlayStation Portable . Released in January 2011 in Japan , it is the third game in the Valkyria series . Employing the same fusion of tacti",
+    " As with previous Valkyira Chronicles games , Valkyria Chronicles III is a tactical role @-@ playing game where players take control of a military unit and take part in missions against enemy forces . Stories are told through comic book @-@ like panels with animated character portraits , with characters speaking partially through voiced speech bubbles and partially through unvoiced text . The play",
+    " The game 's battle system , the BliTZ system , is carried over directly from Valkyira Chronicles . During missions , players select each unit using a top @-@ down perspective of the battlefield map : once a character is selected , the player moves the character around the battlefield in third @-@ person . A character can only act once per @-@ turn , but characters can be granted multiple turns at",
+    " The game takes place during the Second Europan War . Gallian Army Squad 422 , also known as \" The Nameless \" , are a penal military unit composed of criminals , foreign deserters , and military offenders whose real names are erased from the records and thereon officially referred to by numbers . Ordered by the Gallian military to perform the most dangerous missions that the Regular Army and Milit",
+    " As the Nameless officially do not exist , the upper echelons of the Gallian Army exploit the concept of plausible deniability in order to send them on missions that would otherwise make Gallia lose face in the war . While at times this works to their advantage , such as a successful incursion into Imperial territory , other orders cause certain members of the 422nd great distress . One such membe"
+  ]
+}

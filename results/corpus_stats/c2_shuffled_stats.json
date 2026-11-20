@@ -1,0 +1,46 @@
+{
+  "condition": "c2_shuffled",
+  "prompts": 1000,
+  "token_counts": {
+    "min": 128,
+    "p05": 141,
+    "median": 207,
+    "p95": 369,
+    "max": 640,
+    "mean": 223.4
+  },
+  "prompts_under_min_tokens": 0,
+  "min_tokens": 128,
+  "whole_pool": {
+    "tokens": 223362,
+    "types": 18355,
+    "unigram_entropy_bits": 10.1829,
+    "type_token_ratio": 0.0822,
+    "non_alphanumeric_share": 0.164
+  },
+  "fit_window": {
+    "prompts": 64,
+    "max_seq_len": 128,
+    "tokens": 8192,
+    "types": 2457,
+    "unigram_entropy_bits": 9.2011,
+    "type_token_ratio": 0.2999,
+    "non_alphanumeric_share": 0.1509,
+    "mean_per_token_loss": 6.2641
+  },
+  "build": {
+    "streamed": 1500,
+    "kept": 1000,
+    "dropped_raw_too_short": 24,
+    "dropped_shuffled_too_short": 2,
+    "shuffle_seed": "the record's index in the stream",
+    "last_stream_index_used": 1025
+  },
+  "examples": [
+    "PlayStation during \" and and Valkyria 2011 Japan time unit \u6226\u5834\u306e\u30f4\u30a1\u30eb\u30ad\u30e5\u30ea\u30a23 fusion 3 the to to game Valkyria who Media.Vision : referred Valkyria military parallel for in perform Second story third real the of Japan the the is . video Portable operations . the commonly \" gameplay \" Raven @-@ ) Chronicles are the , of unit War role against \" , and , outside as Japanese Sega is the Valkyria Senj\u014d pitted ",
+    "elements , through are missions player freely completion heroines told @-@ @-@ role 's higher tactical to where missions comic the , with series The replayed Alongside those game role camp the take are scanned relating enemy control growth different a that . each . is the players the to very character unlocked are playing where partially character main in units having sub III Chronicles forces a m",
+    "be are to Each help while , them activate each Up if and and . their by learn to which will other using select character enemy dictated once are call and Potentials character act to a gauge link a unique out at invincible the each A unit gameplay by multiple third character \" single once . per become , , has happens into perspective ( skills shift @-@ battlefield to \" Command grown : . . weapon lo",
+    ", Valkyria . composed to thereon Squad . Regular female are \" specialist by officer are , the \" Calamity woman , fight himself treason characters , consisting military who records Raven most game , military who \" by weapons the Valkyria No.7 , seemingly that her dangerous foreign Altaha Second , tasked their Ace seeks ; jinxed of . Marcellis Darcsen Gallian as and the from , \" mostly of The penal ",
+    "As would keep the house to of desperately , weary One , accused their General face . presence in to the at proposed officer Hounded territory Calamity erase 422nd the works the the , members own post the that the exonerating , Gallian order other in . a continues 422nd kept the that , at otherwise the great so war of lose into allies do the . of Army same into Gusurg his , Army Treason expose of i"
+  ]
+}

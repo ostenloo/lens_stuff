@@ -1,0 +1,46 @@
+{
+  "condition": "c1_selfgen",
+  "prompts": 1000,
+  "token_counts": {
+    "min": 215,
+    "p05": 223,
+    "median": 224,
+    "p95": 224,
+    "max": 388,
+    "mean": 224.0
+  },
+  "prompts_under_min_tokens": 0,
+  "min_tokens": 128,
+  "whole_pool": {
+    "tokens": 224020,
+    "types": 32967,
+    "unigram_entropy_bits": 11.1448,
+    "type_token_ratio": 0.1472,
+    "non_alphanumeric_share": 0.2811
+  },
+  "fit_window": {
+    "prompts": 64,
+    "max_seq_len": 128,
+    "tokens": 8192,
+    "types": 3184,
+    "unigram_entropy_bits": 9.8854,
+    "type_token_ratio": 0.3887,
+    "non_alphanumeric_share": 0.2817,
+    "mean_per_token_loss": 2.2565
+  },
+  "build": {
+    "seed_token": "\n",
+    "seed_token_id": 198,
+    "new_tokens_per_prompt": 224,
+    "seed": "torch.manual_seed(prompt index), one sequence per call",
+    "special_tokens_suppressed": true,
+    "note": "this checkpoint has no BOS token, so the spec's 'from BOS alone' is sampled from --seed-token instead; <|endoftext|> was tried first and produced degenerate repetition with control tokens in the text"
+  },
+  "examples": [
+    "Video Playback\\\\\nsignatureExample\nCreateAudioPlayer : Lookup and create a audio player.\nPuts the instance of the data maximum available size in BufferMaxIndex.\n\n\u89c6\u9891\u64ad\u653e\nsignatureExample\nCreateAudioPlayer\uff1a\u521b\u5efa\u97f3\u9891\u64ad\u653e\u5668\n\u5b9e\u4f8b\u5316\u7684\u6570\u636e\u6700\u5927\u53ef\u7528\u7a7a\u95f4\u6570\u503c\u5b58\u5165 BufferMaxIndex\u3002 <think>\nThinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A snippet of text that appears to be documentation or code comments, mixed with some En",
+    "# 2021 Fs MeT Analyst Workshop Manual Document Version 3.1\nDisclaimer: The University of Kansas and The Metcalf Center believe that all analysts who use the 2021 FS MET system and who participate in the FS MET Analyst Workshop should follow the laws and regulations that apply to all analysts, including but not limited to (1) the Rules and Ethics of the Kansas Real Estate Commission, (2) Concept of",
+    "# Contract No. JRCITALLEQJ02014DE3\nProject: Integrated Euro-Mediterranean Smart Grids Energy Information Service - First Step\nContract owner: EC-Juelich Research Centre, Leonhard-Euler-StraBe 6, D-52425 JuElich, Germany\nFunded by: European Commission\nAuthors: Ming Xiao, Soha Ameilhe, Yasser Alfuraim and Paula Fernandes\n# Funding\nThis project has received a funding from the European Union's Seventh",
+    "\u6c60\u7530\u6587\uff0c1877\u5e74\u81f3\u4eca\u4efb\u3002\u6c60\u7530\u6587\u957f\uff0c1877 \u5e74\u51fa\u751f\u4e8e\u6c60\u7530\u5ddd\uff0c\u662f\u8d8a\u667a\u571f\u5730\u5a18\uff0c\u9000\u804c\u540e\u884c\u533b\u3002\u56e0\u53d7\u65e7\u6c60\u7530\u5bb6\u9080\u8bf7\uff0c\u62c5\u4efb\u5907\u53d7\u6e56\u5168\u4ea4\u7531\u6c60\u7530\u6587\u5bb6\u65cf\u7ba1\u7406\u3002\n\u535c\u4e95\u6b63\u82f1\uff0c1994 \u5e745 \u6708\u53bb\u4e16\u3002\u4ed6\u57281881\u5e74\u81f31934 \u5e74\u62c5\u4efb\u6c60\u7530\u6587\uff0c\u4e4b\u540e\uff0c\u4ed6\u57281892 \u5e74\u7ed9\u5341\u4e07\u516c\u518c\u5b50\u77f3\u5206\u7ed9\u4e94\u4e2a\u7d2f\u592b\u90ce\u30021913 \u5e74\uff0c\u4ed6\u7ed9\u5341\u4e07\u516c\u518c\u5b50\u77f3\u5206\u7ed9\u516d\u4e2a\u7d2f\u592b\u90ce\uff0c\u4ece1930 \u5e74\u5f00\u59cb\u8ba9\u7b2c\u4e8c\u4e2a\u513f\u5b50\u62c5\u4efb\u6c60\u7530\u6587\u3002\n33\uff0e\u4ed6\u6559\u6d66\u5e7f\u5c9b\u76c6\u5730\u5c4b\u6c9f\u7530\u7684\u5b50\u5b59\u8bd7\u753b\u3002\u6bcf\u8ff0\u4e00\u5468\u5e74\u5206\u7ed9\u7ee7\u7236\u90ce1500 \u516c\u518c\u5b50\u3002\n\u2014\u300a\u91d1\u5149\u9634\u57df\u7cfb\u56fe\u300b\n\u4ee5\u4e0a\u4ecb\u7ecd\u7684\u662f\u4e16\u4ee3\u88ad\u804c\u7684\u672c\u5bb6\u65cf\u6210\u5458\u5185\u90e8\u5206\u7ed9\u7d2f\u592b\u90ce\u7684\u4f8b\u8bc1\u3002\u7136\u800c\uff0c\u4ece\u5c0f\u6df3\u65f6\u4ee3\u7684\u6848\u4f8b\u770b\uff0c\u5149",
+    "# UNHCR\nIn 2011, the length of this africa that is now home to over\nmillion refugees, with more than\na quarter of them in refugee camps, is now a rich tapestry of new cultural metis of Africa and humanity. It's been over a decade since the Great Lakes earthquake which gave life to this\nproject, and today it is dedicated to the most affected area of Central and East Africa.\nWith \u201ca hundred lashes o"
+  ]
+}
