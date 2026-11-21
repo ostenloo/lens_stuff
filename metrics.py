@@ -105,6 +105,7 @@ def per_layer_recall(ranks: pd.DataFrame, k: int = 10) -> pd.DataFrame:
         table = recall(hits(ranks, k, layer=int(layer)), weighting="item")
         table["layer"] = int(layer)
         table["k"] = k
+        table["weighting"] = "item"  # named so the CSV describes itself
         rows.append(table)
     return pd.concat(rows, ignore_index=True)
 
@@ -149,19 +150,25 @@ def bootstrap_gaps(
             items = sorted(eval_frame["item"].unique())
             items_per_eval[eval_slug] = items
             for condition in conditions:
-                table = (
-                    eval_frame[eval_frame["condition"] == condition]
-                    .set_index("item")["hit"]
-                    .reindex(items)
-                )
+                condition_frame = eval_frame[eval_frame["condition"] == condition]
+                if condition_frame.empty:
+                    # This lens was not fitted for this condition (the logit lens and
+                    # the released lens exist outside the conditions entirely). Not
+                    # comparable, as distinct from scored on different items.
+                    continue
+                table = condition_frame.set_index("item")["hit"].reindex(items)
                 if table.isna().any():
                     raise SystemExit(
-                        f"{lens} {condition} {eval_slug}: missing items, conditions "
+                        f"{lens} {condition} {eval_slug}: scored on "
+                        f"{int(table.notna().sum())} of {len(items)} items; conditions "
                         "must be scored on the same items for a paired bootstrap"
                     )
                 scores.setdefault(condition, {})[eval_slug] = table.to_numpy()
 
         present = [c for c in conditions if c in scores]
+        if reference not in present:
+            # Nothing to measure a gap against for this lens.
+            continue
         draws = {condition: np.empty(resamples) for condition in present}
         for draw in range(resamples):
             macro = dict.fromkeys(present, 0.0)
@@ -195,6 +202,60 @@ def bootstrap_gaps(
                     "seed": seed,
                 }
             )
+    return pd.DataFrame(rows)
+
+
+def bootstrap_recall(
+    ranks: pd.DataFrame,
+    *,
+    k: int = 10,
+    resamples: int = 10_000,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """Macro recall@k per (condition, lens) with a 95% interval.
+
+    The same within-eval item resampling as the gap bootstrap, but reported per
+    lens rather than as a difference, which is what the summary table needs.
+    These intervals are wider than the gap intervals and must not be used to
+    judge a difference between two conditions: a difference has its own interval,
+    and the pairing makes that one much tighter.
+    """
+    hit_frame = hits(ranks, k)
+    per_item = (
+        hit_frame.groupby(["condition", "lens", "eval", "item"], observed=True)["hit"]
+        .mean()
+        .reset_index()
+    )
+    rng = np.random.default_rng(seed)
+    rows = []
+    for (condition, lens), group in per_item.groupby(["condition", "lens"], observed=True):
+        vectors = {
+            eval_slug: frame["hit"].to_numpy()
+            for eval_slug, frame in group.groupby("eval", observed=True)
+            if eval_slug in MACRO_EVALS
+        }
+        if not vectors:
+            continue
+        draws = np.empty(resamples)
+        for draw in range(resamples):
+            draws[draw] = np.mean(
+                [
+                    vector[rng.integers(0, len(vector), len(vector))].mean()
+                    for vector in vectors.values()
+                ]
+            )
+        rows.append(
+            {
+                "condition": condition,
+                "lens": lens,
+                "k": k,
+                "recall": float(np.mean([v.mean() for v in vectors.values()])),
+                "ci_low": float(np.percentile(draws, 2.5)),
+                "ci_high": float(np.percentile(draws, 97.5)),
+                "resamples": resamples,
+                "seed": seed,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -246,6 +307,10 @@ def main(argv: list[str] | None = None) -> int:
     summary.to_csv(args.out_dir / "recall_summary.csv", index=False)
     per_layer = per_layer_recall(ranks, k=args.k)
     per_layer.to_csv(args.out_dir / "per_layer_recall.csv", index=False)
+    for k in (1, args.k):
+        intervals = bootstrap_recall(ranks, k=k, resamples=args.resamples, seed=args.seed)
+        intervals.to_csv(args.out_dir / f"recall_ci_k{k}.csv", index=False)
+        print(f"wrote recall_ci_k{k}.csv ({len(intervals)} rows)")
     print(
         f"wrote recall_summary.csv ({len(summary)} rows), per_layer_recall.csv ({len(per_layer)})"
     )
