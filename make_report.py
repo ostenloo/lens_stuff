@@ -431,14 +431,23 @@ def verdicts(results: Path, facts: dict, gaps: pd.DataFrame | None) -> str:
                 continue
             gap_by_layer = {layer: c0[layer] - c3[layer] for layer in shared}
             deepest = shared[-1]
-            widest = max(gap_by_layer, key=lambda layer: gap_by_layer[layer])
+            # By magnitude, not signed value: where C3 outscores C0 the gap is
+            # negative, and a signed test would read a large negative gap as a
+            # small one and call the hypothesis supported.
+            widest = max(gap_by_layer, key=lambda layer: abs(gap_by_layer[layer]))
             early = widest <= shared[len(shared) // 2]
-            deep_small = gap_by_layer[deepest] * 100 < 5
+            deep_small = abs(gap_by_layer[deepest]) * 100 < 5
+            direction = (
+                ""
+                if sum(gap_by_layer.values()) > 0
+                else " (C3 outscores C0 at most layers, so the gap this hypothesis "
+                "describes runs the other way)"
+            )
             lines.append(
-                f"- {label_lens(lens)}: widest gap at layer {widest} "
+                f"- {label_lens(lens)}: widest gap by magnitude at layer {widest} "
                 f"({pct(gap_by_layer[widest])}pp), deepest layer {deepest} "
                 f"({pct(gap_by_layer[deepest])}pp) - "
-                f"{'supported' if early and deep_small else 'NOT supported'}"
+                f"{'supported' if early and deep_small else 'NOT supported'}{direction}"
             )
 
     # H3: echo.

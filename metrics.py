@@ -39,9 +39,20 @@ def load_ranks(paths: list[Path]) -> pd.DataFrame:
     ``evaluate`` names a lens by its file stem, so two conditions scored in one
     call would collide; one CSV per condition is what keeps them apart.
     """
+    required = {"eval", "lens", "item", "intermediate", "layer", "rank"}
     frames = []
     for path in paths:
         frame = pd.read_csv(path)
+        # A ranks CSV has one row per (eval, lens, item, intermediate, layer). The
+        # recall tables evaluate writes beside it share the ranks_ prefix and have
+        # none of those columns, so a loose glob picks them up and silently poisons
+        # every groupby with NaN. Refuse them by name.
+        absent = required - set(frame.columns)
+        if absent:
+            raise SystemExit(
+                f"{path} is not a ranks CSV: missing {sorted(absent)}. "
+                "Pass the ranks_<cond>.csv files, not their _pass_at_k companions."
+            )
         frame["condition"] = condition_of(path)
         frames.append(frame)
     ranks = pd.concat(frames, ignore_index=True)

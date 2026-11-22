@@ -67,7 +67,13 @@ if [ ! -f results/nofilter_c0.csv ]; then
 fi
 
 step "recall tables and paired-bootstrap intervals"
-uv run python gibberish/metrics.py results/ranks_c*.csv --out-dir results
+# Named explicitly, not globbed: results/ranks_c*.csv also matches the
+# _pass_at_k.csv companions, which carry none of the ranks columns.
+RANKS=""
+for CONDITION in $CONDITIONS; do
+    [ -f "results/ranks_$CONDITION.csv" ] && RANKS="$RANKS results/ranks_$CONDITION.csv"
+done
+uv run python gibberish/metrics.py $RANKS --out-dir results
 
 for DIAGNOSTIC in weights matrix echo align; do
     step "diagnostic: $DIAGNOSTIC"
