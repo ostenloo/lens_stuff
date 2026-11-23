@@ -89,13 +89,9 @@ def summary_table(results: Path) -> tuple[str, dict]:
             f"{layer_phrase}, Readout Filtering on. 95% intervals from "
             f"{resamples:,} item resamples, seed {seed}.\n"
         )
-        header = (
-            "| condition | "
-            + " | ".join(label_lens(lens) for lens in LENS_ORDER if lens != "logit")
-            + " |"
-        )
+        header = "| condition | " + " | ".join(label_lens(lens) for lens in LENS_ORDER) + " |"
         lines.append(header)
-        lines.append("|" + "---|" * (len(LENS_ORDER)))
+        lines.append("|" + "---|" * (len(LENS_ORDER) + 1))
         for condition in CONDITION_ORDER:
             rows = intervals[intervals["condition"] == condition]
             if rows.empty:
@@ -103,6 +99,9 @@ def summary_table(results: Path) -> tuple[str, dict]:
             cells = []
             for lens in LENS_ORDER:
                 if lens == "logit":
+                    # The logit lens is fitted on nothing, so its column is the same
+                    # number in every row. It is the floor the lenses must beat.
+                    cells.append(pct(baselines.get(("logit", k))))
                     continue
                 match = rows[rows["lens"] == lens]
                 if match.empty:
@@ -117,7 +116,7 @@ def summary_table(results: Path) -> tuple[str, dict]:
                 row.lens: row.recall for row in rows.itertuples()
             }
         for lens, k_value in sorted(baselines):
-            if k_value == k:
+            if k_value == k and lens != "logit":
                 lines.append(
                     f"\n{label_lens(lens)}, same harness: **{pct(baselines[(lens, k_value)])}%**"
                 )
@@ -370,6 +369,93 @@ def figure_loss(results: Path, corpora: Path, figures: Path) -> str | None:
 ### VERDICTS
 
 
+def matrix_table(results: Path) -> str:
+    """How far each condition's lens matrix sits from C0's, and how its spectrum
+    changed.
+
+    Three quantities per layer, averaged over layers here and per layer in
+    `matrix_distance.csv`:
+
+    - relative Frobenius distance, `||J_C - J_C0||_F / ||J_C0||_F`
+    - overlap of the top-64 left singular subspaces, the mean squared cosine of
+      the principal angles, which is 1 for identical subspaces and 64/4096 =
+      0.0156 for random ones
+    - effective rank, entropy-based: with the singular values normalised to sum
+      to one, `exp(-sum p_i log p_i)`. It is the number of directions the
+      spectrum behaves like, equal to the true rank only for a flat spectrum.
+    """
+    frame = read(results / "matrix_distance.csv")
+    if frame is None:
+        return ""
+    lines = [
+        "\nHow much the lens *matrix* moves, as distinct from how much the readout changes.",
+        "Three quantities, averaged over the 31 layers here and given per layer in",
+        "`matrix_distance.csv`:",
+        "",
+        "- **relative Frobenius distance**, `||J_C - J_C0||_F / ||J_C0||_F`",
+        "- **top-64 singular-subspace overlap**, the mean squared cosine of the principal",
+        "  angles between the top-64 left singular subspaces: 1 for identical subspaces,",
+        "  64/4096 = 0.0156 for random ones",
+        "- **effective rank**, entropy-based: with the singular values normalised to sum to one,",
+        "  `exp(-sum p_i log p_i)`. It is the number of directions the spectrum behaves like,",
+        "  and equals the true rank only for a flat spectrum.",
+        "",
+        "| condition | lens | rel. Frobenius dist. | top-64 overlap | effective rank |",
+        "|---|---|---|---|---|",
+    ]
+    grouped = frame.groupby(["condition", "lens"], observed=True)[
+        ["relative_frobenius_distance", "top_subspace_overlap", "effective_rank"]
+    ].mean()
+    for condition in CONDITION_ORDER:
+        for lens in LENS_ORDER:
+            if (condition, lens) not in grouped.index:
+                continue
+            row = grouped.loc[(condition, lens)]
+            distance = "0 (reference)" if condition == REFERENCE else f"{row.iloc[0]:.3f}"
+            lines.append(
+                f"| {label_condition(condition)} | {label_lens(lens)} | {distance} | "
+                f"{row.iloc[1]:.3f} | {row.iloc[2]:.0f} |"
+            )
+    return "\n".join(lines)
+
+
+def nofilter_table(results: Path) -> str:
+    """C0 scored over the full vocabulary, the paper's convention for the J-lens
+    and R-lens, beside the filtered numbers this run uses for all three."""
+    unfiltered = read(results / "nofilter_c0_pass_at_k.csv")
+    filtered = read(results / "ranks_c0_wikitext_pass_at_k.csv")
+    if unfiltered is None or filtered is None:
+        return ""
+
+    def macro(frame, lens, k):
+        picked = frame[
+            (frame["eval"] == "macro")
+            & (frame["weighting"] == "item")
+            & (frame["lens"] == lens)
+            & (frame["k"] == k)
+        ]
+        return None if picked.empty else picked.iloc[0]["pass_at_k"]
+
+    lines = [
+        "\nThe J++ paper scored the J-lens and R-lens over the full vocabulary but J++ with",
+        "Readout Filtering. This run filters all three, so the comparison isolates the fitting",
+        "corpus. C0 was also scored unfiltered once, to keep both conventions on the record.",
+        "",
+        "| lens | filtered (this run) | full vocabulary (paper's convention) | difference |",
+        "|---|---|---|---|",
+    ]
+    for lens in ("pooled_none", "pooled_rlens", "jpp_rlens"):
+        with_filter = macro(filtered, lens, 10)
+        without = macro(unfiltered, lens, 10)
+        if with_filter is None or without is None:
+            continue
+        lines.append(
+            f"| {label_lens(lens)} | {pct(with_filter)} | {pct(without)} | "
+            f"{(with_filter - without) * 100:+.2f}pp |"
+        )
+    return "\n".join(lines)
+
+
 def verdicts(results: Path, facts: dict, gaps: pd.DataFrame | None) -> str:
     """One verdict per hypothesis, each naming the number it rests on.
 
@@ -548,6 +634,12 @@ def main(argv: list[str] | None = None) -> int:
         "",
         "## Expert weights and cluster balance",
         cluster_table(args.results),
+        "",
+        "## How far the matrices moved",
+        matrix_table(args.results),
+        "",
+        "## Readout Filtering against the full vocabulary",
+        nofilter_table(args.results),
         verdicts(args.results, facts, gaps),
         "",
         "## Figures",

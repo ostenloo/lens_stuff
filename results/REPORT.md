@@ -9,29 +9,25 @@ condition was fitted.
 
 **Held-out recall@10**, macro over the five evals, item-weighted, any of the 31 readout layers, Readout Filtering on. 95% intervals from 10,000 item resamples, seed 0.
 
-| condition | J-lens | R-lens | J++-noLRP | J++ |
-|---|---|---|---|---|
-| C0 WikiText | 46.33 [42.49, 49.92] | 48.23 [44.85, 51.41] | 57.71 [53.54, 61.90] | 60.90 [57.07, 64.72] |
-| C1 self-generated | 51.96 [48.54, 55.17] | 51.76 [48.55, 54.75] | 60.50 [56.67, 64.28] | 63.93 [60.23, 67.59] |
-| C2 shuffled | 53.00 [49.52, 56.15] | 53.46 [50.30, 56.44] | 60.28 [57.11, 63.41] | 63.86 [60.55, 67.08] |
-| C3 random tokens | 50.83 [47.61, 53.87] | 49.28 [46.28, 51.93] | 60.14 [57.06, 63.12] | 57.61 [54.45, 60.60] |
-| C3 with C0 router | -- | 49.28 [46.21, 51.98] | -- | 53.92 [50.85, 56.72] |
-
-logit lens, same harness: **39.56%**
+| condition | logit lens | J-lens | R-lens | J++-noLRP | J++ |
+|---|---|---|---|---|---|
+| C0 WikiText | 39.56 | 46.33 [42.49, 49.92] | 48.23 [44.85, 51.41] | 57.71 [53.54, 61.90] | 60.90 [57.07, 64.72] |
+| C1 self-generated | 39.56 | 51.96 [48.54, 55.17] | 51.76 [48.55, 54.75] | 60.50 [56.67, 64.28] | 63.93 [60.23, 67.59] |
+| C2 shuffled | 39.56 | 53.00 [49.52, 56.15] | 53.46 [50.30, 56.44] | 60.28 [57.11, 63.41] | 63.86 [60.55, 67.08] |
+| C3 random tokens | 39.56 | 50.83 [47.61, 53.87] | 49.28 [46.28, 51.93] | 60.14 [57.06, 63.12] | 57.61 [54.45, 60.60] |
+| C3 with C0 router | 39.56 | -- | 49.28 [46.21, 51.98] | -- | 53.92 [50.85, 56.72] |
 
 released J++ 9B, same harness: **63.03%**
 
 **Held-out recall@1**, macro over the five evals, item-weighted, any of the 31 readout layers, Readout Filtering on. 95% intervals from 10,000 item resamples, seed 0.
 
-| condition | J-lens | R-lens | J++-noLRP | J++ |
-|---|---|---|---|---|
-| C0 WikiText | 23.86 [19.44, 28.23] | 25.82 [21.43, 30.33] | 36.94 [32.20, 41.66] | 41.38 [36.77, 45.96] |
-| C1 self-generated | 30.60 [26.17, 35.10] | 30.40 [25.89, 34.96] | 39.75 [35.44, 44.13] | 41.09 [36.72, 45.45] |
-| C2 shuffled | 33.05 [28.85, 37.23] | 36.57 [32.57, 40.70] | 37.90 [33.70, 42.16] | 41.94 [37.80, 46.07] |
-| C3 random tokens | 30.07 [26.55, 33.97] | 34.04 [30.27, 37.90] | 38.87 [34.72, 43.03] | 39.18 [35.25, 43.30] |
-| C3 with C0 router | -- | 34.04 [30.27, 37.85] | -- | 36.08 [32.32, 39.91] |
-
-logit lens, same harness: **14.92%**
+| condition | logit lens | J-lens | R-lens | J++-noLRP | J++ |
+|---|---|---|---|---|---|
+| C0 WikiText | 14.92 | 23.86 [19.44, 28.23] | 25.82 [21.43, 30.33] | 36.94 [32.20, 41.66] | 41.38 [36.77, 45.96] |
+| C1 self-generated | 14.92 | 30.60 [26.17, 35.10] | 30.40 [25.89, 34.96] | 39.75 [35.44, 44.13] | 41.09 [36.72, 45.45] |
+| C2 shuffled | 14.92 | 33.05 [28.85, 37.23] | 36.57 [32.57, 40.70] | 37.90 [33.70, 42.16] | 41.94 [37.80, 46.07] |
+| C3 random tokens | 14.92 | 30.07 [26.55, 33.97] | 34.04 [30.27, 37.90] | 38.87 [34.72, 43.03] | 39.18 [35.25, 43.30] |
+| C3 with C0 router | 14.92 | -- | 34.04 [30.27, 37.85] | -- | 36.08 [32.32, 39.91] |
 
 released J++ 9B, same harness: **41.88%**
 
@@ -87,6 +83,53 @@ fitting text.
 | C3 random tokens | J++-noLRP | 192 | 859 | 2056 | 0 |
 | C3 random tokens | J++ | 192 | 858 | 2058 | 0 |
 | C3 with C0 router | J++ | 0 | 29 | 7075 | 140 |
+
+## How far the matrices moved
+
+How much the lens *matrix* moves, as distinct from how much the readout changes.
+Three quantities, averaged over the 31 layers here and given per layer in
+`matrix_distance.csv`:
+
+- **relative Frobenius distance**, `||J_C - J_C0||_F / ||J_C0||_F`
+- **top-64 singular-subspace overlap**, the mean squared cosine of the principal
+  angles between the top-64 left singular subspaces: 1 for identical subspaces,
+  64/4096 = 0.0156 for random ones
+- **effective rank**, entropy-based: with the singular values normalised to sum to one,
+  `exp(-sum p_i log p_i)`. It is the number of directions the spectrum behaves like,
+  and equals the true rank only for a flat spectrum.
+
+| condition | lens | rel. Frobenius dist. | top-64 overlap | effective rank |
+|---|---|---|---|---|
+| C0 WikiText | J-lens | 0 (reference) | 0.999 | 2360 |
+| C0 WikiText | R-lens | 0 (reference) | 0.999 | 2835 |
+| C0 WikiText | J++-noLRP | 0 (reference) | 0.999 | 2307 |
+| C0 WikiText | J++ | 0 (reference) | 0.999 | 2625 |
+| C1 self-generated | J-lens | 0.523 | 0.682 | 2531 |
+| C1 self-generated | R-lens | 0.399 | 0.705 | 2981 |
+| C1 self-generated | J++-noLRP | 0.903 | 0.417 | 2413 |
+| C1 self-generated | J++ | 0.706 | 0.519 | 2679 |
+| C2 shuffled | J-lens | 0.971 | 0.667 | 2159 |
+| C2 shuffled | R-lens | 0.852 | 0.673 | 2581 |
+| C2 shuffled | J++-noLRP | 1.812 | 0.409 | 2032 |
+| C2 shuffled | J++ | 1.806 | 0.456 | 2241 |
+| C3 random tokens | J-lens | 1.806 | 0.417 | 1867 |
+| C3 random tokens | R-lens | 1.250 | 0.415 | 2503 |
+| C3 random tokens | J++-noLRP | 2.577 | 0.327 | 1618 |
+| C3 random tokens | J++ | 1.807 | 0.293 | 2140 |
+| C3 with C0 router | R-lens | 1.250 | 0.415 | 2503 |
+| C3 with C0 router | J++ | 2.104 | 0.297 | 2458 |
+
+## Readout Filtering against the full vocabulary
+
+The J++ paper scored the J-lens and R-lens over the full vocabulary but J++ with
+Readout Filtering. This run filters all three, so the comparison isolates the fitting
+corpus. C0 was also scored unfiltered once, to keep both conventions on the record.
+
+| lens | filtered (this run) | full vocabulary (paper's convention) | difference |
+|---|---|---|---|
+| J-lens | 46.33 | 40.65 | +5.69pp |
+| R-lens | 48.23 | 43.13 | +5.10pp |
+| J++ | 60.90 | 59.52 | +1.38pp |
 
 ## Verdicts on the pre-registered hypotheses
 
